@@ -6,6 +6,7 @@
     <title>Intrusion Detection</title>
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue-router/3.0.6/vue-router.min.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
@@ -33,6 +34,7 @@
                     <el-row type="flex" justify="center">
                         <el-button type="primary" :disabled="btn_disable" @click="analyse" class="uploadButton">分 析
                         </el-button>
+
                     </el-row>
 
                 </el-col>
@@ -71,6 +73,9 @@
                             <el-form-item label="标签">
                                 <span>{{ props.row.label }}</span>
                             </el-form-item>
+                            <el-form-item label="诊断规则">
+                                <span><el-button type="primary" @click="open(props.row.tree,props.row.leaf)">查看</el-button></span>
+                            </el-form-item>
                         </el-form>
                     </template>
                 </el-table-column>
@@ -82,21 +87,22 @@
                 </el-table-column>
                 <el-table-column label="协议" prop="protocol">
                 </el-table-column>
-                <el-table-column label="标签" prop="label" :filters="[{ text: 'Normal', value: 'Normal' }, { text: 'Attack', value: 'Attack' }]"
-                :filter-method="filterTag"
-                filter-placement="bottom-end">
-                <template slot-scope="scope">
-                    <el-tag
-                      :type="scope.row.label === 'Normal' ? 'success' : 'danger'"
-                      disable-transitions>{{scope.row.label}}</el-tag>
-                  </template>
+                <el-table-column label="标签" prop="label"
+                    :filters="[{ text: 'Normal', value: 'Normal' }, { text: 'Attack', value: 'Attack' }]"
+                    :filter-method="filterTag" filter-placement="bottom-end">
+                    <template slot-scope="scope">
+                        <el-tag :type="scope.row.label === 'Normal' ? 'success' : 'danger'" disable-transitions>
+                            {{scope.row.label}}</el-tag>
+                    </template>
                 </el-table-column>
             </el-table>
             <el-row type="flex" justify="end" style="margin-top: 20px;">
-                <el-pagination background layout="prev, pager, next" :page-size="10" :pager-count="15" :total="totalItem" @current-change="current" :current-page.sync="crPage">
+                <el-pagination background layout="prev, pager, next" :page-size="10" :pager-count="15"
+                    :total="totalItem" @current-change="current" :current-page.sync="crPage">
                 </el-pagination>
             </el-row>
             <el-button type="primary" icon="el-icon-arrow-left" circle class="button" @click="back"></el-button>
+
         </div>
 
 
@@ -126,9 +132,10 @@
             height: 50px;
             margin-top: 50px;
         }
-        .button{
+
+        .button {
             width: 50px;
-            height:50px;
+            height: 50px;
             font-size: 20px;
             position: fixed;
             left: 2%;
@@ -136,44 +143,52 @@
         }
     </style>
     <script>
+        const router = new VueRouter({
+            mode: "history", // 默认使用hash模式，url会出现#
+        });
         new Vue({
+            router,
             el: '#app',
             data: {
                 filename: '.pacp',
                 btn_disable: true,
                 table: 0,
-                crPage:1,
-                prSize:10,
-                totalItem:0,
-                totalPage:0,
+                crPage: 1,
+                prSize: 10,
+                totalItem: 0,
+                totalPage: 0,
                 tableData: [{
-                    src_ip:'192.168.56.134',
-                    dst_ip:'192.168.56.2',
-                    src_port:'42575',
-                    dst_port:'9999',
-                    timestamp:'12/04/2022 02:19:27 下午',
-                    protocol:'UDP',
-                    GBDT_pred:'0.227',
-                    ATT_pred:'0.247',
-                    label:'Normal'
+                    src_ip: '192.168.56.134',
+                    dst_ip: '192.168.56.2',
+                    src_port: '42575',
+                    dst_port: '9999',
+                    timestamp: '12/04/2022 02:19:27 下午',
+                    protocol: 'UDP',
+                    GBDT_pred: '0.227',
+                    ATT_pred: '0.247',
+                    label: 'Normal',
+                    tree: "0",
+                    leaf:"1"
                 },
                 {
-                    src_ip:'192.168.56.134',
-                    dst_ip:'192.168.56.2',
-                    src_port:'42575',
-                    dst_port:'9999',
-                    timestamp:'12/04/2022 02:19:27 下午',
-                    protocol:'UDP',
-                    GBDT_pred:'0.227',
-                    ATT_pred:'0.247',
-                    label:'Attack'
+                    src_ip: '192.168.56.134',
+                    dst_ip: '192.168.56.2',
+                    src_port: '42575',
+                    dst_port: '9999',
+                    timestamp: '12/04/2022 02:19:27 下午',
+                    protocol: 'UDP',
+                    GBDT_pred: '0.227',
+                    ATT_pred: '0.247',
+                    label: 'Attack',
+                    tree: "0",
+                    leaf:"1"
                 }],
-                loading:false
+                loading: false
             },
             methods: {
-                back(){
-                    this.table=0
-                    this.crPage=1
+                back() {
+                    this.table = 0
+                    this.crPage = 1
                     this.$refs.upload.clearFiles()
                 },
                 handleSuccess(response) {
@@ -186,35 +201,35 @@
                         type: 'success'
                     });
                 },
-                current(page){
-                    if(page==this.totalPage){
-                        this.prSize = this.totalItem%10
+                current(page) {
+                    if (page == this.totalPage) {
+                        this.prSize = this.totalItem % 10
                     }
-                    else{
-                        this.prSize=10
+                    else {
+                        this.prSize = 10
                     }
-                    this.callForData(this.crPage,this.prSize)
+                    this.callForData(this.crPage, this.prSize)
                 },
-                callForData(crpage,prSize){
+                callForData(crpage, prSize) {
                     _this = this
-                    _this.loading=true
+                    _this.loading = true
                     axios.get("http://127.0.0.1:8080/analysePage",
                         {
                             params: {
                                 filename: _this.filename,
-                                crPage:_this.crPage,
-                                prSize:_this.prSize
+                                crPage: _this.crPage,
+                                prSize: _this.prSize
                             }
                         }).then(
                             res => {
-                               _this.tableData=res.data.tableData
-                               _this.loading=false
+                                _this.tableData = res.data.tableData
+                                _this.loading = false
                             }
                         )
                 },
                 analyse() {
-                    this.table=1
-                    
+                    this.table = 1
+
                     _this = this
                     axios.get("http://127.0.0.1:8080/analyse",
                         {
@@ -225,10 +240,22 @@
                             res => {
                                 console.log(res)
                                 _this.totalItem = res.data.total
-                                _this.totalPage = Math.floor(_this.totalItem/10)+1
-                                _this.callForData(_this.crPage,_this.prSize)
+                                _this.totalPage = Math.floor(_this.totalItem / 10) + 1
+                                _this.callForData(_this.crPage, _this.prSize)
                             }
                         )
+                },
+                open(tree,leaf) {
+                    console.log(tree)
+                    console.log(leaf)
+                    const routeData = this.$router.resolve({
+                        path: '/decision-tree.html',
+                        query: {
+                            tree: "0",
+                            leaf:"1",
+                        }
+                    });
+                    window.open(routeData.href, '_blank');
                 }
             }
         })
